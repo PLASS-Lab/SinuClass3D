@@ -1,0 +1,35 @@
+# @package _global_
+# ============================================================================
+# Disabled Cross-Validation Configuration
+# ============================================================================
+# Single train/val split for quick experiments and debugging
+#
+# Runtime: ~2 hours for single model
+#
+# Use this for:
+#   • Quick experiments and prototyping
+#   • Hyperparameter tuning
+#   • Debugging code
+#   • Feature testing
+#
+# ⚠️  NOT for publication! Use data/cross_validation=standard for papers.
+#
+# Usage:
+#   python scripts/classification/train.py data/cross_validation=disabled evaluation/modes=single_model
+# ============================================================================
+
+data:
+  cross_validation:
+    enabled: false
+    mode: disabled
+    n_folds: 5  # Use fold 0 of 5-fold split (80/20 train/val)
+    
+    stratified: true
+    patient_level: true
+    random_state: null  # Use global seed from reproducibility.yaml
+
+# Training settings configured in: training/base.yaml
+# Override with: training.num_epochs=100 (if needed for quick testing)
+
+# Evaluation mode configured in: evaluation/modes/single_model.yaml
+# This is automatically set when using cross_validation=disabled

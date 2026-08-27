@@ -1,0 +1,34 @@
+# @package _global_
+# ============================================================================
+# Data Paths Configuration
+# ============================================================================
+# File paths for datasets and caching
+#
+# Usage:
+#   data.paths.csv_path=path/to/data.csv
+#   data.paths.cache_dir=/path/to/cache
+# ============================================================================
+
+data:
+  paths:
+    csv_path: "csv/patient_ids_cv_original.csv"           # CV training set (original)
+    root_dir: ""                                    # Root directory for images (if empty, paths in CSV must be absolute)
+  
+  # Image type selection (which column to use from CSV)
+  # This allows you to switch between different preprocessed versions without creating new CSVs
+  image_type: "multi_channel"                     # 3-channel: Masked Air + Soft + Bone
+  # Note: The selected column will be used as 'image_path' for loading
+  
+  # Dual-window configuration (used when image_type="dual_window")
+  dual_window:
+    channel_0: "bbox_5mm_1mm_iso_mask_path"         # Segmentation mask (binary)
+    channel_1: "bbox_5mm_1mm_iso_soft_path"         # Soft tissue/mucosa (-150 to 250 HU)
+  
+  # Multi-channel configuration (used when image_type="multi_channel")
+  # Combines tissue-specific channels for better ECRS classification
+  # 3 channels with ROI mask applied (non-ROI regions blacked out)
+  # Spacing: 1mm x 1mm x 1mm (isotropic) | HU Ranges: Air(≤-150) | Soft(-150~250) | Bone(≥250)
+  multi_channel:
+    channel_0: "bbox_5mm_1mm_iso_masked_air_path"    # Masked Air/Sinus cavity (≤ -150 HU)
+    channel_1: "bbox_5mm_1mm_iso_masked_soft_path"   # Masked Soft tissue/mucosa (-150 to 250 HU)
+    channel_2: "bbox_5mm_1mm_iso_masked_bone_path"   # Masked Bone (≥ 250 HU)

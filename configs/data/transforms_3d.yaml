@@ -1,0 +1,123 @@
+# @package _global_
+# ============================================================================
+# 3D Data Transforms Configuration
+# ============================================================================
+# CT-Specific transforms for 3D classification following CLAIM/TRIPOD+AI
+# All parameters documented for publication
+#
+# Pipeline:
+#   A. Preprocessing: HU windowing, spatial standardization, normalization
+#   B. Spatial augmentation: Flips, affine transforms (anatomically valid)
+#   C. Intensity augmentation: Noise, smoothing, scaling (CT-specific)
+#   D. Multi-Crop MIL: Sample K crops per volume
+#
+# Inference:
+#   • Sliding window: Full volume coverage (100% vs 2% with center crop)
+#
+# Usage:
+#   transforms.preprocessing.multi_crop.num_samples=8
+#   transforms.train_augmentation.enabled=false
+# ============================================================================
+
+transforms:
+  # ============================================================================
+  # A. PRE-PROCESSING & STANDARDIZATION (Always Applied, Leak-Safe)
+  # ============================================================================
+  preprocessing:
+    # 1. HU windowing (CT-specific, following nnU-Net best practices)
+    hu_windowing:
+      enabled: true
+      window_min: -1000                       # REPORT: HU range [-1000, 1000]
+      window_max: 1000
+      scale_min: -1.0                         # Scale to [-1, 1]
+      scale_max: 1.0
+      # Alternative: Use z-score per volume (see normalization below)
+
+    # 2. Spatial standardization
+    spatial:
+      # Reorient to RAS (Right-Anterior-Superior)
+      reorient_to_ras: true                   # REPORT: All volumes reoriented to RAS
+
+      # Resample to isotropic spacing
+      resample:
+        enabled: true
+        target_spacing: [1.0, 1.0, 1.0]       # REPORT: Resampled to 1.0×1.0×1.0 mm³
+        mode: "trilinear"                     # REPORT: Trilinear interpolation
+
+    # 3. Intensity normalization (per-volume z-score, LEAK-SAFE)
+    normalization:
+      method: "zscore_per_volume"             # REPORT: Per-volume z-score normalization
+      nonzero: true                           # Only normalize non-zero voxels
+      channel_wise: true                      # LEAK-SAFE: per volume, not per dataset
+
+  # ============================================================================
+  # B. SPATIAL AUGMENTATION (Realistic, Anatomically Valid)
+  # ============================================================================
+  train_augmentation:
+    enabled: true
+
+    # 1. Random Flips (anatomically valid only)
+    random_flip:
+      enabled: true
+      axes: [0, 1]                            # REPORT: LR & AP flips only (NOT SI)
+      prob: 0.5                               # REPORT: Applied with p=0.5
+      # Rationale: Avoid SI flips for head CT anatomy realism
+
+    # 2. Small Affine Transforms (following nnU-Net modest approach)
+    random_affine:
+      enabled: true
+      rotate_range: [-7, 7]                   # REPORT: Rotation ±7° per axis
+      scale_range: [0.95, 1.05]               # REPORT: Scale 0.95-1.05
+      translate_range_xy: [8, 10]             # REPORT: In-plane translation 8-10mm
+      translate_range_z: [4, 6]               # REPORT: Through-plane translation 4-6mm
+      prob: 0.25                              # REPORT: Applied with p=0.25
+      mode: "bilinear"
+      padding_mode: "border"
+      # Rationale: Modest rotation/scale like nnU-Net; avoid heavy elastic warps
+
+  # ============================================================================
+  # C. INTENSITY AUGMENTATION (CT-Specific, Mild)
+  # ============================================================================
+  intensity_augmentation:
+    enabled: true
+
+    # 1. Gaussian Noise (simulates acquisition noise)
+    random_gaussian_noise:
+      enabled: true
+      mean: 0.0
+      std: 0.02                               # REPORT: σ=0.02 of normalized range
+      prob: 0.15                              # REPORT: Applied with p=0.15
+      # Rationale: CT-specific noise, avoid MRI-specific Rician noise
+
+    # 2. Gaussian Smoothing (simulates kernel/resolution variance)
+    random_gaussian_smooth:
+      enabled: true
+      sigma_range: [0.25, 0.5]                # REPORT: σ=0.25-0.5 voxels
+      prob: 0.2                               # REPORT: Applied with p=0.2
+      # Rationale: Simulates different reconstruction kernels
+
+    # 3. Scale Intensity (multiplicative)
+    random_scale_intensity:
+      enabled: true
+      factors: [0.9, 1.1]                     # REPORT: Multiplicative 0.9-1.1
+      prob: 0.2                               # REPORT: Applied with p=0.2
+      # Rationale: Simulates slight HU calibration differences
+
+    # 4. Shift Intensity (additive)
+    random_shift_intensity:
+      enabled: true
+      offsets: [-0.05, 0.05]                  # REPORT: Additive ±0.05
+      prob: 0.2                               # REPORT: Applied with p=0.2
+      # Rationale: Simulates baseline shift
+
+    # Note: Keep gamma/contrast changes small to respect HU physics
+    random_adjust_contrast:
+      enabled: false                          # Disabled for CT (use with caution)
+      gamma_range: [0.95, 1.05]
+      prob: 0.1
+
+  # ============================================================================
+  # D. VALIDATION/TEST SETTINGS
+  # ============================================================================
+  val_test:
+    augmentation: false                       # No augmentation at validation or test time

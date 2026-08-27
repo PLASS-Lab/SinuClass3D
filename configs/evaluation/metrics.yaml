@@ -1,0 +1,186 @@
+# @package _global_
+# ============================================================================
+# Comprehensive Evaluation Metrics Configuration
+# ============================================================================
+# Complete evaluation metrics for medical image classification
+# Spanning discrimination, calibration and clinical utility
+#
+# Organized by evaluation domain:
+#   • Discrimination: ROC-AUC, PR-AUC, Sensitivity, Specificity
+#   • Calibration: ECE, Brier score, slope/intercept (probability quality)
+#   • Clinical Utility: Decision Curve Analysis (DCA), net benefit
+#   • Statistical Tests: McNemar (paired), DeLong (AUC comparison)
+#
+# All metrics reported with 95% CI via bootstrap resampling
+#
+# Usage:
+#   metrics.discrimination.roc_auc.enabled=false
+#   metrics.calibration.ece.n_bins=15
+#   metrics.clinical_utility.enabled=false
+# ============================================================================
+
+# ============================================================================
+# Cross-Validation Configuration
+# ============================================================================
+# Cross-validation settings configured in: configs/cross_validation/
+# Available modes: standard, full_training, disabled
+# Override with: data/cross_validation=standard
+#
+# Examples:
+#   python train.py cross_validation=standard    # 5-fold CV (most papers)
+#   python train.py cross_validation=disabled    # Single train/val split
+
+# ============================================================================
+# Evaluation Mode
+# ============================================================================
+# Controls when to compute expensive metrics (bootstrap CIs)
+# - "training": Fast evaluation during training (NO bootstrap CIs)
+# - "final": Full evaluation with bootstrap CIs for publication
+# - "auto": Auto-detect context (training validation = fast, standalone eval = full)
+evaluation_mode: "auto"  # Automatically detects training vs final evaluation
+
+# Bootstrap configuration (used only when evaluation_mode="final")
+bootstrap:
+  n_iterations: 1000           # Number of bootstrap iterations
+  stratified: true             # Maintain class distribution
+  random_seed: 42              # For reproducibility
+  method: "percentile"         # percentile or bca
+  confidence_level: 0.95       # 95% confidence intervals
+
+metrics:
+  # ============================================================================
+  # Discrimination Metrics
+  # ============================================================================
+  # Core performance metrics: how well does the model separate classes?
+  discrimination:
+    # Primary metrics (threshold-independent)
+    primary:
+      roc_auc:
+        enabled: true
+        multiclass: "ovr"                     # ovr (one-vs-rest) for multiclass
+        bootstrap_ci: true
+        report_per_fold: true                 # Per-outer-fold with CIs
+        report_pooled_oof: true               # Pooled OOF with CIs
+        
+      pr_auc:
+        enabled: true
+        multiclass: "ovr"
+        bootstrap_ci: true
+        better_for_imbalance: true            # Preferred over ROC-AUC for imbalanced data
+        report_per_fold: true
+        report_pooled_oof: true
+    
+    # Secondary metrics (at selected threshold)
+    # ⚠️  Threshold selection configured in: evaluation/operating_point.yaml
+    secondary:
+      sensitivity:                            # True Positive Rate (NOT "recall")
+        enabled: true
+        bootstrap_ci: true
+        report_per_fold: true
+        report_pooled_oof: true
+        
+      specificity:                            # True Negative Rate
+        enabled: true
+        bootstrap_ci: true
+        report_per_fold: true
+        report_pooled_oof: true
+        
+      ppv:                                    # Positive Predictive Value (NOT "precision")
+        enabled: true
+        bootstrap_ci: true
+        report_per_fold: true
+        report_pooled_oof: true
+        
+      npv:                                    # Negative Predictive Value
+        enabled: true
+        bootstrap_ci: true
+        report_per_fold: true
+        report_pooled_oof: true
+        
+      f1_score:                               # Harmonic mean of PPV and Sensitivity
+        enabled: true
+        bootstrap_ci: true
+        report_per_fold: true
+        report_pooled_oof: true
+        
+      balanced_accuracy:                      # (Sensitivity + Specificity) / 2
+        enabled: true
+        bootstrap_ci: true
+        report_per_fold: true
+        report_pooled_oof: true
+    
+    # Per-class metrics
+    per_class:
+      enabled: true
+      metrics:
+        - "precision"
+        - "recall"
+        - "f1_score"
+        - "support"
+  
+  # ============================================================================
+  # Calibration Metrics
+  # ============================================================================
+  # Probability quality: are predicted probabilities reliable?
+  calibration:
+    expected_calibration_error:
+      enabled: true                           # Enable ECE computation
+      n_bins: 10                              # Number of bins for calibration
+      norm: "l1"                              # l1, l2, or max
+      bootstrap_ci: true                      # Bootstrap confidence intervals
+      report_per_fold: true                   # Report per outer fold
+      report_pooled_oof: true                 # Report pooled OOF
+      
+    brier_score:
+      enabled: true                           # Enable Brier score
+      bootstrap_ci: true                      # Bootstrap confidence intervals
+      report_per_fold: true                   # Report per outer fold
+      report_pooled_oof: true                 # Report pooled OOF
+      
+    calibration_slope:
+      enabled: true                           # Enable calibration slope (reported per TRIPOD)
+      bootstrap_ci: true                      # Bootstrap 95% CI for slope
+      report_per_fold: true                   # Report per outer fold
+      report_pooled_oof: true                 # Report pooled OOF
+      
+    calibration_intercept:
+      enabled: true                           # Enable calibration intercept (reported per TRIPOD)
+      bootstrap_ci: true                      # Bootstrap 95% CI for intercept
+      report_per_fold: true                   # Report per outer fold
+      report_pooled_oof: true                 # Report pooled OOF
+      
+    calibration_plot:
+      enabled: true                           # Enable calibration plot
+      n_bins: 10                              # Number of bins for plot
+      save_path: "calibration_plot.png"       # Save path for plot
+      pre_post_comparison: true               # Show pre/post calibration if recalibration used
+  
+  # ============================================================================
+  # Clinical Utility
+  # ============================================================================
+  # Decision Curve Analysis: what's the clinical value?
+  clinical_utility:
+    enabled: true                             # Enable DCA
+    threshold_range: [0.0, 1.0]              # Range of probability thresholds
+    n_thresholds: 100                         # Number of thresholds to evaluate
+    plot: true                                # Generate DCA plot
+    save_path: "decision_curve.png"           # Save path for DCA plot
+    compute_net_benefit: true                 # Compute net benefit at each threshold
+    reference_strategies:
+      - "treat_all"                           # Treat everyone strategy
+      - "treat_none"                          # Treat no one strategy
+  
+  # ============================================================================
+  # Statistical Tests
+  # ============================================================================
+  # Model comparison and statistical significance
+  statistical_tests:
+    # McNemar's test (for paired predictions)
+    mcnemar:
+      enabled: true                           # Enable McNemar's test
+      continuity_correction: true             # Apply Yates' continuity correction
+      
+    # DeLong's test (for comparing AUCs)
+    delong:
+      enabled: true                           # Enable DeLong's test
+      compare_to_baseline: null               # Path to baseline predictions (optional)

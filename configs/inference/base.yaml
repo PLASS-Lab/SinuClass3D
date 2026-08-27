@@ -1,0 +1,25 @@
+# @package _global_
+# ============================================================================
+# Base Inference Configuration
+# ============================================================================
+# Common inference settings shared across all modes
+#
+# This file should NOT be used directly.
+# Use inference=standard instead.
+# ============================================================================
+
+inference:
+  # Full volume processing (volumes fit in GPU memory)
+  # No sliding window needed for classification
+
+  # Ensemble Predictions (Cross-Validation Folds)
+  ensemble:
+    enabled: true                             # Ensemble all CV folds
+    weights: null                             # Auto-weight by validation performance
+
+  # Output Options
+  save_predictions: true                      # Save final predictions
+  save_probabilities: true                    # Save class probabilities
+
+  # Post-processing
+  threshold: 0.5                              # Classification threshold

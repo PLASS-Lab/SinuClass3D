@@ -1,0 +1,31 @@
+# @package _global_
+# ============================================================================
+# Simple 3D CNN Configuration
+# ============================================================================
+# Minimal 3D CNN for baseline comparison
+#
+# Architecture:
+#   Conv3D(in, 32) -> BN -> ReLU -> MaxPool
+#   Conv3D(32, 64) -> BN -> ReLU -> MaxPool
+#   Conv3D(64, 128) -> BN -> ReLU -> MaxPool
+#   Conv3D(128, 256) -> BN -> ReLU -> AdaptiveAvgPool
+#   Dropout -> FC(256, num_classes)
+#
+# Parameters: ~500K (very lightweight)
+# Input size: Any (uses AdaptiveAvgPool)
+#
+# Usage:
+#   model.dropout=0.5
+# ============================================================================
+
+model:
+  name: "sinus3dcnn"
+  
+  # Input configuration
+  in_channels: 3                              # 4-channel: Air + Soft + Bone + Mask
+  
+  # Note: num_classes is defined in config_3d.yaml under classification.num_classes
+  # This ensures single source of truth for task definition
+  
+  # Network modifications
+  dropout: 0.3                                # Dropout before final FC

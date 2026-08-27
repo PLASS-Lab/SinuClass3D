@@ -1,0 +1,35 @@
+# ============================================================================
+# Operating Point Selection - BASE CONFIGURATION
+# ============================================================================
+# This is the base configuration with shared parameters.
+# For specific use cases, use:
+#   - base: Default (optimize threshold on validation)
+#   - deployment_threshold: External validation (frozen threshold)
+#
+# Methods:
+#   • youden: Maximizes Youden's J statistic (sensitivity + specificity - 1)
+#   • f1_optimal: Maximizes F1 score
+#   • sens_at_spec: Maximizes sensitivity at target specificity
+#   • spec_at_sens: Maximizes specificity at target sensitivity
+# ============================================================================
+
+# Threshold selection method
+method: "youden"                          # youden, f1_optimal, sens_at_spec, spec_at_sens
+
+# Target constraints (for sens_at_spec or spec_at_sens methods)
+target_sensitivity: 0.90                  # For spec_at_sens: achieve this sensitivity
+target_specificity: 0.80                  # For sens_at_spec: achieve this specificity
+
+# Data leakage prevention
+selection_set: "validation"               # validation (CORRECT) or test (WRONG - causes bias!)
+
+# Per-fold vs pooled threshold (for CV)
+per_fold_threshold: true                  # true: Different threshold per fold (recommended)
+
+# Reporting
+report_per_fold_thresholds: true          # Report threshold for each fold
+report_threshold_variability: true        # Report std/range of thresholds across folds
+
+# Mode (overridden by specific configs)
+use_prespecified_threshold: false         # Compute optimal threshold on validation data
+prespecified_threshold_value: null        # Will be read from per-fold threshold.yaml if needed

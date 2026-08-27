@@ -1,0 +1,94 @@
+# @package _global_
+# ============================================================================
+# Loss Function Configuration
+# ============================================================================
+# Loss functions for imbalanced binary classification following Medical Image
+# Analysis journal best practices.
+#
+# Primary Options:
+#   • weighted_ce: Weighted Cross-Entropy (RECOMMENDED - standard for medical imaging)
+#   • focal: Focal Loss (alternative for severe imbalance, Lin et al. 2017)
+#
+# Class Imbalance Handling:
+#   • Class weights: Auto-computed from each training fold (inverse frequency)
+#   • Prevents data leakage by computing per-fold
+#   • Standard approach in medical imaging literature
+#
+# Usage:
+#   training.loss.name=weighted_ce           # Default (recommended)
+#   training.loss.name=focal                 # Alternative
+#   training.loss.focal.gamma=3.0            # Adjust focusing parameter
+#
+# Paper Reporting:
+#   "We used weighted cross-entropy loss with class weights computed as the
+#    inverse frequency of each class in the training fold."
+# ============================================================================
+
+training:
+  loss:
+    # Primary loss function
+    name: "weighted_ce"                         # weighted_ce (recommended) or focal
+    
+    # ============================================================================
+    # Weighted Cross-Entropy (recommended for class imbalance)
+    # ============================================================================
+    # Standard approach for imbalanced medical image classification
+    # References:
+    #   - King & Zeng "Logistic Regression in Rare Events Data" (2001)
+    #   - Standard in medical imaging: used in most classification papers
+    # ============================================================================
+    weighted_ce:
+      # Class weights (auto-computed from training fold)
+      class_weights: null                       # null = auto-compute (recommended)
+      weight_mode: "inverse_frequency"          # Inverse class frequency (standard)
+      
+      # Label smoothing (optional - improves calibration)
+      label_smoothing: 0.0                      # 0.0 = disabled, 0.1 = 10% smoothing
+      # Note: Label smoothing can improve calibration (Müller et al. 2019)
+      #       but adds complexity. Use only if calibration is critical.
+      
+    # ============================================================================
+    # Focal Loss (ALTERNATIVE for severe imbalance)
+    # ============================================================================
+    # Down-weights easy examples, focuses training on hard examples
+    # Reference: Lin et al. "Focal Loss for Dense Object Detection" (RetinaNet, 2017)
+    # 
+    # Use when:
+    #   - Severe class imbalance (>10:1 ratio)
+    #   - Standard weighted CE underperforms
+    #   - Need to focus on hard/minority examples
+    #
+    # For ECRS classification (typically ~40:60 ratio):
+    #   Weighted CE is usually sufficient. Use Focal only if CE underperforms.
+    # ============================================================================
+    focal:
+      alpha: null                               # Per-class weights (null = auto-compute)
+      gamma: 2.0                                # Focusing parameter (2.0 = standard)
+      reduction: "mean"                         # mean or sum
+      
+      # Gamma interpretation:
+      #   0   = standard CE (no focusing)
+      #   1   = mild focusing
+      #   2   = standard (RetinaNet default)
+      #   3-5 = strong focusing (use for severe imbalance)
+
+# ============================================================================
+# Reporting Guidelines
+# ============================================================================
+# For Methods section, report:
+#
+# Example (Weighted CE):
+#   "We minimized weighted cross-entropy loss with class weights computed as
+#    the inverse frequency of each class in the training fold to address class
+#    imbalance. Class weights were re-computed for each fold to prevent data
+#    leakage."
+#
+# Example (Focal Loss):
+#   "We used Focal Loss (γ=2.0) to address class imbalance, which down-weights
+#    easy examples and focuses training on hard negatives [Lin et al. 2017]."
+#
+# DO NOT use:
+#   - Adaptive loss switching (not standard, hard to justify)
+#   - Multiple losses simultaneously (complicates interpretation)
+#   - Auxiliary losses for simple classification (unnecessary complexity)
+# ============================================================================

@@ -1,0 +1,52 @@
+# @package _global_
+# ============================================================================
+# Learning Rate Scheduler Configuration
+# ============================================================================
+# Learning rate scheduling strategies for classification training
+#
+# Strategies:
+#   • cosine: Cosine annealing (smooth decay, recommended)
+#   • reduce_on_plateau: Reduce LR when metric plateaus (adaptive)
+#   • step: Step decay at fixed epochs (simple)
+#
+# Warmup:
+#   • Gradually increase LR for first N epochs (stabilizes training)
+#   • Recommended for large batch sizes or transfer learning
+#
+# Usage:
+#   training.scheduler.name=reduce_on_plateau
+#   training.scheduler.warmup.enabled=false
+#   training.scheduler.T_max=100
+# ============================================================================
+
+training:
+  scheduler:
+    name: "plateau"
+    
+    # ReduceLROnPlateau parameters (RECOMMENDED for preventing logit inflation)
+    # Drops LR aggressively when val_loss stops improving
+    mode: "min"                                 # min for loss, max for AUC
+    factor: 0.5                                 # Multiply LR by 0.5 on plateau
+    patience: 10                                # Wait 10 epochs before reducing
+    min_lr: 1.0e-6                              # Don't go below this LR
+    threshold: 0.001                            # Minimum change to qualify as improvement
+    
+    # Warmup
+    warmup:
+      enabled: true                             # Stabilizes early training
+      warmup_epochs: 5                          # 5 epochs typical for medical imaging
+      warmup_start_lr: 1.0e-6                   # Start from small LR → optimizer.lr (1e-4)
+    
+    # Cosine annealing parameters (kept for reference, inactive with plateau scheduler)
+    # T_max: 1000                               # Total epochs (matches training.num_epochs)
+    # eta_min: 1.0e-6                           # Minimum learning rate
+      
+    # Alternative: Cosine annealing (smooth decay)
+    # name: "cosine"
+    # T_max: 1000
+    # eta_min: 1.0e-6
+    
+    # Alternative: Step LR
+    # name: "step"
+    # step_size: 50
+    # gamma: 0.1                                # Multiply LR by 0.1 every step_size epochs

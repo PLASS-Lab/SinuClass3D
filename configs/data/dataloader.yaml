@@ -1,0 +1,19 @@
+# @package _global_
+# ============================================================================
+# DataLoader Optimization Configuration
+# ============================================================================
+# PyTorch DataLoader performance settings
+#
+# Usage:
+#   data.prefetch_factor=4
+#   data.persistent_workers=true
+#   data.pin_memory=false
+#
+# Note: num_workers is configured in compute section
+# ============================================================================
+
+data:
+  # DataLoader optimization settings
+  prefetch_factor: 2                          # Batches to prefetch per worker (reduced for stability)
+  persistent_workers: true                    # Keep workers alive between epochs (true=faster startup)
+  pin_memory: false                           # Disabled: causes issues with large 3D medical images

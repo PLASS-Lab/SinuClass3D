@@ -1,0 +1,23 @@
+# @package _global_
+# ============================================================================
+# Computational Resources Configuration
+# ============================================================================
+# Hardware and compute settings for training and evaluation
+#
+# Settings:
+#   • Device: CUDA GPU or CPU (auto-fallback if CUDA unavailable)
+#   • Batch size: Training batch size (reduced for multi-crop MIL)
+#   • Validation batch size: For inference
+#   • Workers: DataLoader parallel workers (0 avoids MetaTensor issues)
+#
+# Usage:
+#   compute.device=cpu
+#   compute.batch_size=4
+#   compute.num_workers=4
+# ============================================================================
+
+compute:
+  device: "cuda"                              # Device: "cuda" or "cpu" (auto-fallback if CUDA unavailable)
+  batch_size: 4                               # Training batch size (A6000 48GB can handle larger batches)
+  val_batch_size: 1                           # Validation/test batch size
+  num_workers: 8                              # DataLoader workers (increase for 4-channel NIfTI loading)

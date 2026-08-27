@@ -1,0 +1,48 @@
+# @package _global_
+# ============================================================================
+# Evaluation Base Configuration
+# ============================================================================
+# Core evaluation settings including checkpoint paths and fold configuration
+#
+# Settings:
+#   • Checkpoint path: Path to trained model weights
+#   • Experiment dir: Where evaluation results are saved
+#   • Fold: Which CV fold to evaluate
+#   • Primary metrics: ROC-AUC, PR-AUC (with 95% CI)
+#   • Secondary metrics: Sensitivity, specificity, F1, etc.
+#
+# Usage:
+#   evaluation.checkpoint_path=path/to/model.pth
+#   evaluation.fold=0
+# ============================================================================
+
+evaluation:
+  # Checkpoint and fold configuration
+  checkpoint_path: ""                         # Path to model checkpoint (optional - auto-discovered if experiment_dir set)
+  experiment_dir: "${core.experiment_dir}"    # Defaults to training experiment dir (can override via CLI)
+  fold: 0                                     # Fold number to evaluate (only used if evaluate_all_folds=false)
+  save_to_fold_dir: true                      # Save results to fold-specific directory
+  evaluate_all_folds: true                    # Evaluate all CV folds separately
+  held_out_test_cohort: false                  # Held-out test cohort evaluation mode (no ensemble)
+  
+  # Single model evaluation (for full training mode)
+  use_single_model: false                     # If true, use single model instead of ensemble
+                                              # Auto-discovers from: {experiment_dir}/full_train/checkpoints/best_model.pth
+  
+  # Primary metrics
+  primary_metrics:
+    - "roc_auc"                               # ROC-AUC with 95% CI
+    - "pr_auc"                                # Precision-Recall AUC with 95% CI
+    
+  # Secondary metrics
+  secondary_metrics:
+    - "sensitivity"                           # At pre-registered threshold
+    - "specificity"
+    - "f1_score"
+    - "balanced_accuracy"
+    - "brier_score"                           # Calibration quality
+    - "ece"                                   # Expected Calibration Error
+  
+  # Per-class analysis
+  per_class_metrics: true
+  confusion_matrix: true

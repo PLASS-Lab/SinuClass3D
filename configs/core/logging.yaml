@@ -1,0 +1,22 @@
+# @package _global_
+# ============================================================================
+# Logging Configuration for Classification
+# ============================================================================
+# Console and file logging settings
+#
+# Levels:
+#   • DEBUG: Detailed debugging information
+#   • INFO: General information (recommended)
+#   • WARNING: Warning messages only
+#   • ERROR: Error messages only
+#
+# Usage:
+#   logging.level=DEBUG
+#   logging.console=false
+#   logging.file=false
+# ============================================================================
+
+logging:
+  level: "INFO"       # Logging level: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  console: true       # Log to console (stdout)
+  file: true          # Save logs to file (outputs/experiment_name/logs/train.log)

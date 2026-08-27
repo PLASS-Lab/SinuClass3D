@@ -1,0 +1,88 @@
+# @package _global_
+# ============================================================================
+# 3D Classification Configuration
+# ============================================================================
+# 3D Deep Learning Classification Pipeline
+# Configured for rigorous, reproducible evaluation
+#
+# Components:
+#   • Model: 3D ResNet
+#   • Training: Full-volume 3D classification
+#   • Evaluation: Comprehensive metrics with bootstrap CIs
+#   • Cross-validation: Stratified patient-level splitting
+#
+# Usage:
+#   # Standard 5-fold CV
+#   python scripts/classification/train.py data/cross_validation=standard evaluation/modes=cv_aggregated
+#
+#   # Quick experiment (no CV)
+#   python scripts/classification/train.py data/cross_validation=disabled evaluation/modes=single_model
+#
+#   # Evaluation
+#   python scripts/classification/evaluate.py evaluation.checkpoint_path=path/to/model.pth
+# ============================================================================
+
+defaults:
+  # ============================================================================
+  # 1. Core Infrastructure (Setup First)
+  # ============================================================================
+  - core/base                                 # Experiment name, output directories
+  - core/compute                              # Device, batch size, num_workers
+  - core/reproducibility                      # Random seed, determinism
+  - core/logging                              # Logging configuration
+  - core/wandb                                # Weights & Biases tracking
+
+  # ============================================================================
+  # 2. Data Pipeline
+  # ============================================================================
+  - data/paths                                # CSV path, image type selection
+  - data/dataloader                           # DataLoader optimization
+  - data/transforms_3d                        # CT-specific preprocessing & augmentation
+  - data/external_test                        # External test set (optional)
+
+  # ============================================================================
+  # 3. Model Architecture
+  # ============================================================================
+  - models: sinus3dcnn                        # Primary 3D CNN (1.17 M params)
+
+  # ============================================================================
+  # 4. Training Configuration
+  # ============================================================================
+  - training/optimizer                        # AdamW optimizer
+  - training/scheduler                        # Learning rate scheduler
+  - training/loss                             # Loss function (CE, Focal, etc.)
+  - training/base                             # Training loop, early stopping, checkpointing
+
+  # CV config AFTER training/base so it can override training settings
+  - data/cross_validation: standard            # CV mode: standard, full_training, disabled
+
+  # ============================================================================
+  # 5. Evaluation & Metrics (Phase 1: Metric Computation)
+  # ============================================================================
+  - evaluation/base                           # Evaluation base settings
+  - evaluation/modes: cv_aggregated           # Mode: cv_aggregated (CV) or single_model
+  - evaluation/operating_point: base          # Threshold selection (base, deployment_threshold)
+  - evaluation/metrics                        # ROC-AUC, PR-AUC, sensitivity, specificity
+  - evaluation/bootstrap                      # Bootstrap confidence intervals
+  - evaluation/output                         # Output formats (CSV, JSON, LaTeX)
+
+  # ============================================================================
+  # 6. Inference Configuration
+  # ============================================================================
+  - inference: standard                       # Inference settings (single forward pass, mean ensemble)
+
+  # ============================================================================
+  - _self_
+
+# ============================================================================
+# Task Definition
+# ============================================================================
+classification:
+  task_name: "ecrs_classification"
+  task_type: "binary"                         # binary or multiclass
+  num_classes: 2                              # ECRS vs non-ECRS
+  class_names: ["non-ECRS", "ECRS"]
+
+  # NOTE: Class imbalance is handled automatically:
+  # - Class weights: Computed automatically in data_loading.py (always 'balanced')
+  # - Loss strategy: Configured in training/loss.yaml (loss.name field)

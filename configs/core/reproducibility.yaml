@@ -1,0 +1,25 @@
+# @package _global_
+# ============================================================================
+# Reproducibility Configuration
+# ============================================================================
+# Settings for deterministic behavior and random seed control
+#
+# Options:
+#   • Deterministic: Enable for fully reproducible results (slower)
+#   • Benchmark: CUDNN benchmark mode (faster but non-deterministic)
+#   • Random seed: Global seed for NumPy, PyTorch, Python random
+#
+# Trade-off:
+#   • deterministic=true, benchmark=false: Fully reproducible (slower)
+#   • deterministic=false, benchmark=true: Faster training (less reproducible)
+#
+# Usage:
+#   reproducibility.deterministic=false
+#   reproducibility.benchmark=true
+#   reproducibility.random_seed=123
+# ============================================================================
+
+reproducibility:
+  deterministic: true                         # Enable deterministic operations (slower but reproducible)
+  benchmark: false                            # CUDNN benchmark mode (true=faster, false=reproducible)
+  random_seed: 42                             # Global random seed for reproducibility

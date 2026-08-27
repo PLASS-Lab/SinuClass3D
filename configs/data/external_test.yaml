@@ -1,0 +1,17 @@
+# @package _global_
+# ============================================================================
+# External Test Set Configuration
+# ============================================================================
+# Configuration for testing on external datasets (different site/scanner)
+# Used for generalization testing and domain shift evaluation
+#
+# Usage:
+#   data.external_test.enabled=true
+#   data.external_test.csv_path=path/to/external_test.csv
+# ============================================================================
+
+data:
+  external_test:
+    enabled: true                                    # Enable for external validation
+    csv_path: "csv/patient_ids_held_out_test_original.csv"  # Path to held-out test cohort (original)
+    report_separately: true                          # Report as separate generalization test in results

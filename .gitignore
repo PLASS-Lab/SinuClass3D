@@ -1,0 +1,69 @@
+.idea/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDE
+.vscode/
+.idea/
+
+# Environment
+.venv
+venv/
+ENV/
+
+# Jupyter
+.ipynb_checkpoints
+
+# PyTorch
+*.pth
+*.pt
+
+# Data
+*.nii.gz
+*.nii
+*.dcm
+
+# Logs
+*.log
+logs/
+wandb/
+
+# Experiments
+experiments/
+outputs/
+checkpoints/
+visualization_output/
+
+# session backups and transient files
+*.bak
+*.bak.*
+*.pid
+
+# Patient identifiers (PHI) - never commit. Use csv/patient_ids_TEMPLATE.csv for the schema.
+csv/patient_ids_*.csv
+!csv/patient_ids_TEMPLATE.csv
+.figure_ids.local.env
+
+# SA-ROC is distributed by its authors under review-only terms and cannot
+# be redistributed here. Clone it yourself:
+#   git clone https://github.com/MGH-LMIC/SA-ROC third_party/SA_ROC
+third_party/
+
+# Experiment-only model variants; not part of the release
+src/models/ctfm.py
+src/models/dino3d.py
+src/models/medicalnet.py
+src/models/sinus3dcnn_baseline.py
+configs/models/ctfm.yaml
+configs/models/dino3d.yaml
+configs/models/medicalnet.yaml

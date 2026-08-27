@@ -1,0 +1,6 @@
+# Fixed threshold at 0.5 for baseline comparison
+use_prespecified_threshold: true
+prespecified_threshold_value: 0.5
+
+method: prespecified
+selection_set: none

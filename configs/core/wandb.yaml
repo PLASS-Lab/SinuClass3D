@@ -1,0 +1,47 @@
+# @package _global_
+# ============================================================================
+# W&B Configuration for Classification
+# ============================================================================
+# Weights & Biases experiment tracking configuration
+#
+# Logged Metrics:
+#   • Training: loss, accuracy, PR-AUC, ROC-AUC (per epoch)
+#   • Validation: loss, accuracy, PR-AUC, ROC-AUC, confusion matrix
+#   • Learning rate, gradient norms
+#   • Cross-validation: aggregated metrics across folds
+#
+# Usage:
+#   wandb.enabled=true            (requires `wandb login`)
+#   wandb.project=my_project
+#   wandb.tags=[tag1,tag2]
+# ============================================================================
+
+wandb:
+  enabled: false                              # Opt in with wandb.enabled=true
+  project: "SinuClass3D"                      # W&B project name
+  entity: null                                # Your W&B entity (team/user); null = default
+  
+  # Experiment metadata
+  version: "v1.0"                             # Appended to run name & added as tag (optional)
+  tags: ["3d", "sinus3dcnn", "3ch", "0.5mm_iso", "5fold_cv", "air_soft_bone"]  # W&B tags
+  notes: "Simple 3D CNN for ECRS classification. 3-channel input (Air≤-150 | Soft -150~250 | Bone≥250 HU), 0.5x0.5x1mm spacing."  # W&B description
+  
+  # Model artifact management
+  artifacts:
+    enabled: true                             # Enable model artifact uploading to W&B
+    save_best_model: true                     # Save best model checkpoint as artifact
+    save_final_model: false                   # Save final model (even if not best)
+    save_every_n_epochs: null                 # Save every N epochs (null = disabled)
+    
+    # Note: Artifacts can be large (100-500MB). Disable during development
+    # to speed up training. Enable for important experiments and production.
+  
+  # Metrics logged to W&B:
+  # - Training: loss, accuracy, PR-AUC, ROC-AUC (per epoch)
+  # - Validation: loss, accuracy, PR-AUC, ROC-AUC, confusion matrix
+  # - Learning rate, gradient norms
+  # - Cross-validation: aggregated metrics across folds
+  #
+  # Enable with: wandb.enabled=true
+  # Set project: wandb.project=my_project
+  # Disable artifacts: wandb.artifacts.enabled=false

@@ -1,0 +1,38 @@
+# @package _global_
+# ============================================================================
+# Full Training Configuration (Train on All Samples)
+# ============================================================================
+# Train on 100% of data without validation split.
+# Use this AFTER cross-validation to train final deployment model.
+#
+# Workflow:
+#   1. Run standard CV to get unbiased performance estimate
+#   2. Run full training to get deployment model
+#   3. Test on held-out test cohort with single model
+#
+# Usage:
+#   python scripts/train.py data/cross_validation=full_training
+# ============================================================================
+
+data:
+  cross_validation:
+    enabled: false
+    mode: standard
+    n_folds: 5
+    stratified: true
+    patient_level: true
+    random_state: null
+    primary_metric: pr_auc
+    save_all_folds: false
+    save_best_only: true
+
+  # Full training mode: train on all samples, no validation split
+  full_training:
+    enabled: true                    # Enable full training mode
+    save_by_loss: true               # Model selection by training loss (no val)
+    checkpoint_subdir: "full_train"  # Save to experiment_dir/full_train/
+    
+    # Checkpointing (only save best model)
+    save_last: false                 # Don't save last_checkpoint.pth
+    save_periodic: false             # Don't save periodic checkpoints
+    save_top_k: 1                    # Only keep 1 best checkpoint

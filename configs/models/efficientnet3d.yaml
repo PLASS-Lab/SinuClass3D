@@ -1,0 +1,19 @@
+# @package _global_
+# ============================================================================
+# 3D EfficientNet-B0 Model Configuration
+# ============================================================================
+# Capacity-comparison baseline reported in Table 6 of the paper.
+# Trained with the identical data, split, schedule and augmentation as the
+# primary sinus3dcnn model; only the architecture differs.
+#
+# Usage:
+#   uv run python scripts/train.py models=efficientnet3d core.experiment_name=efficientnet3d_3ch_compare
+# ============================================================================
+
+model:
+  name: "efficientnet3d"
+  architecture: "efficientnet-b0"
+  in_channels: 3                              # Air | Soft | Bone
+  spatial_dims: 3
+  dropout: 0.3                                # Dropout before final FC
+

@@ -1,0 +1,59 @@
+# @package _global_
+# ============================================================================
+# Evaluation Output Configuration
+# ============================================================================
+# Controls how evaluation results are saved (formats, directories, logging)
+# 
+# This is for src.evaluation (Phase 1) outputs only.
+#
+# Usage:
+#   evaluation.output.formats.latex=false
+#   evaluation.output.output_dir=custom_results
+# ============================================================================
+
+evaluation:
+  output:
+    # Output directory for evaluation results (metrics only)
+    output_dir: "evaluation_results"
+    
+    # Decimal precision for all numeric outputs
+    precision: 4
+    
+    # ============================================================================
+    # Save Formats
+    # ============================================================================
+    formats:
+      csv: true                               # CSV tables (easy to read)
+      json: true                              # JSON (for programmatic access)
+      latex: true                             # LaTeX tables (for publication)
+      markdown: true                          # Markdown (for README/docs)
+    
+    # ============================================================================
+    # LaTeX-Specific Settings
+    # ============================================================================
+    latex:
+      bold_best: true                         # Bold best metric in comparison tables
+      include_caption: true                   # Add captions to tables
+      include_label: true                     # Add labels for cross-reference
+      float_format: "%.4f"                    # Formatting for floats
+      
+    # ============================================================================
+    # Basic Report Generation (Phase 1 - Always runs)
+    # ============================================================================
+    generate_summary: true                    # Auto-generate summary.md
+    generate_supplementary: true              # Generate supplementary tables (metrics only)
+    
+    # ============================================================================
+    # What to Save
+    # ============================================================================
+    save_predictions: true                    # Save per-sample predictions
+    save_oof_predictions: true                # Save out-of-fold predictions (CV)
+    save_per_fold_results: true               # Per-fold detailed results
+    save_aggregated_results: true             # Aggregated cross-validation results
+    
+    # ============================================================================
+    # Logging
+    # ============================================================================
+    verbose: true                             # Verbose logging
+    log_to_file: true                         # Save logs to file
+    log_file: "evaluation.log"                # Log file name

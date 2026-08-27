@@ -1,0 +1,21 @@
+# @package _global_
+# ============================================================================
+# Core Configuration for Classification
+# ============================================================================
+# Base project settings including directories and experiment naming
+#
+# Configuration:
+#   • Experiment name: Used in output dirs and W&B run name
+#   • Project base dir: Root directory (uses $PROJECT_ROOT env var)
+#   • Experiment dir: Where outputs/logs are saved
+#
+# Usage:
+#   core.experiment_name=my_experiment
+#   core.project_base_dir=/path/to/project
+# ============================================================================
+
+core:
+  project_base_dir: "${oc.env:PROJECT_ROOT,.}"              # Base dir (override with $PROJECT_ROOT)
+  experiment_name: "simple_cnn_3d_3ch_05mm"  # Experiment name (used in output dirs and W&B run name)
+  add_timestamp: false                                      # Append timestamp to experiment name for uniqueness
+  experiment_dir: "${core.project_base_dir}/experiments/${core.experiment_name}"  # Where outputs/logs are saved

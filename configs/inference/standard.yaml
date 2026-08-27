@@ -1,0 +1,26 @@
+# @package _global_
+# ============================================================================
+# Standard Inference Configuration
+# ============================================================================
+# Recommended for most use cases - balances accuracy and speed
+#
+# Features:
+#   • Full volume processing: Single forward pass per volume
+#   • Mean ensemble: Simple averaging
+#
+# Performance:
+#   • Accuracy: Production-quality results
+#   • Speed: Fast (single forward pass)
+#   • Memory: Moderate GPU usage
+#
+# Usage:
+#   python scripts/classification/predict.py
+# ============================================================================
+
+defaults:
+  - base  # Import base inference settings
+
+inference:
+  # Ensemble (simple averaging)
+  ensemble:
+    merge_mode: "mean"                        # Simple mean (fast)

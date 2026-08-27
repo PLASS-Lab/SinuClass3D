@@ -1,0 +1,35 @@
+# @package _global_
+# ============================================================================
+# Single Model Evaluation Mode
+# ============================================================================
+# Evaluation mode for single train/val split scenarios (no CV aggregation).
+#
+# Use with:
+#   • cross_validation=disabled (single split)
+#   • Debugging and quick experiments
+#   • External test set evaluation
+#
+# Features:
+#   • Bootstrap CIs from single validation set
+#   • No fold aggregation
+#   • Faster evaluation
+#
+# Usage:
+#   python scripts/classification/train.py \
+#     cross_validation=disabled \
+#     evaluation/modes=single_model
+# ============================================================================
+
+evaluation:
+  mode: "single_model"
+  
+  # Bootstrap confidence intervals
+  bootstrap_ci:
+    enabled: true
+    n_iterations: 2000
+    confidence_level: 0.95
+  
+  # Single model settings
+  compute_pooled_metrics: false     # No fold aggregation needed
+  per_fold_metrics: false           # Not applicable for single model
+  per_class_metrics: true           # Per-class analysis

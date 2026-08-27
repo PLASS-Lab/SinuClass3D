@@ -1,0 +1,39 @@
+# @package _global_
+# ============================================================================
+# Optimizer Configuration
+# ============================================================================
+# AdamW optimizer for classification training
+#
+# Optimizer Options:
+#   • AdamW: Adaptive learning with weight decay (recommended)
+#   • SGD: Stochastic Gradient Descent with momentum
+#
+# Usage:
+#   training.optimizer.lr=0.001
+#   training.optimizer.weight_decay=0.0005
+# ============================================================================
+
+training:
+  optimizer:
+    name: "adamw"
+    
+    # Learning rate
+    lr: 0.0001                                  # 1e-4
+    
+    # AdamW-specific
+    betas: [0.9, 0.999]
+    eps: 1.0e-8
+    weight_decay: 0.0001                        # 1e-4 (L2 regularization)
+    
+    # Alternative: SGD with momentum
+    # name: "sgd"
+    # lr: 0.01
+    # momentum: 0.9
+    # weight_decay: 0.0001
+    # nesterov: true
+    
+    # Gradient clipping
+    grad_clip:
+      enabled: true
+      max_norm: 1.0
+      norm_type: 2

@@ -1,0 +1,39 @@
+# @package _global_
+# ============================================================================
+# Cross-Validation Aggregated Evaluation Mode
+# ============================================================================
+# Evaluation mode for cross-validation scenarios where predictions from
+# multiple folds need to be aggregated for final metrics.
+#
+# Use with:
+#   • cross_validation=standard (5-fold CV)
+#
+# Features:
+#   • Pools predictions from all folds
+#   • Computes aggregate metrics with bootstrap CIs
+#   • Per-fold and pooled reporting
+#
+# Usage:
+#   python scripts/classification/train.py \
+#     cross_validation=standard \
+#     evaluation/modes=cv_aggregated
+# ============================================================================
+
+evaluation:
+  mode: "cv_aggregated"
+  
+  # Bootstrap confidence intervals
+  bootstrap_ci:
+    enabled: true
+    n_iterations: 2000
+    confidence_level: 0.95
+  
+  # Cross-validation specific settings
+  compute_pooled_metrics: true      # Aggregate predictions from all folds
+  per_fold_metrics: true            # Also report individual fold metrics
+  per_class_metrics: true           # Per-class analysis
+  
+  # Aggregation strategy
+  aggregation:
+    method: "pooled"                # Options: "pooled", "mean", "median"
+    report_fold_statistics: true    # Report mean ± std across folds

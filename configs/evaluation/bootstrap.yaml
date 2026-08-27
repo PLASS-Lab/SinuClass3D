@@ -1,0 +1,25 @@
+# @package _global_
+# ============================================================================
+# Bootstrap Confidence Intervals Configuration
+# ============================================================================
+# Statistical confidence interval estimation using bootstrap resampling
+# Bootstrap resampling for confidence intervals on reported metrics
+#
+# Methods:
+#   • percentile: Simple percentile method (default, most common)
+#   • bca: Bias-corrected and accelerated (more accurate but slower)
+#
+# Usage:
+#   evaluation.bootstrap.n_iterations=5000
+#   evaluation.bootstrap.confidence_level=0.99
+#   evaluation.bootstrap.method=bca
+# ============================================================================
+
+evaluation:
+  bootstrap:
+    enabled: true                             # Enable bootstrap confidence intervals
+    n_iterations: 2000                        # Number of bootstrap iterations (2000 is a common default)
+    confidence_level: 0.95                    # Confidence level (0.95 = 95% CI)
+    random_seed: null                         # Random seed (null = use global from reproducibility.yaml)
+    stratified: true                          # Stratified bootstrap (maintains class distribution)
+    method: "percentile"                      # percentile or bca (bias-corrected accelerated)

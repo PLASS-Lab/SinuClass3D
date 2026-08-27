@@ -1,0 +1,38 @@
+# @package _global_
+# ============================================================================
+# Standard K-Fold Cross-Validation Configuration
+# ============================================================================
+# Most common approach for research papers and model evaluation
+#
+# Recommended for:
+#   • Most research papers
+#   • Model evaluation with fixed hyperparameters
+#   • Reasonable compute time (~10 hours for 5 folds)
+#
+# Features:
+#   • 5-fold stratified patient-level CV
+#   • Bootstrap confidence intervals
+#   • Pooled metrics across all folds
+#
+# Usage:
+#   python scripts/classification/train.py data/cross_validation=standard evaluation/modes=cv_aggregated
+# ============================================================================
+
+data:
+  cross_validation:
+    enabled: true
+    mode: standard
+    n_folds: 5
+    stratified: true
+    patient_level: true  # Prevents data leakage
+    random_state: null  # Use global seed from reproducibility.yaml
+    
+    # Primary metric for model selection
+    primary_metric: pr_auc  # Options: roc_auc, pr_auc, f1_score
+    
+    # Checkpointing
+    save_all_folds: false   # Set true for ensemble predictions
+    save_best_only: true
+
+# Evaluation mode configured in: evaluation/modes/cv_aggregated.yaml
+# This is automatically set when using cross_validation=standard

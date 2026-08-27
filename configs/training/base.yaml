@@ -1,0 +1,51 @@
+# @package _global_
+# ============================================================================
+# Training Configuration
+# ============================================================================
+# Core training settings including epochs, early stopping, and monitoring
+#
+# Settings:
+#   • Epochs: Maximum training epochs
+#   • Early stopping: Stop when metric plateaus (saves time)
+#   • Mixed precision: Automatic Mixed Precision (faster, less memory)
+#   • Gradient clipping: Prevents exploding gradients
+#   • Checkpointing: Save best/last models
+#
+# Usage:
+#   training.num_epochs=100
+#   training.early_stopping.patience=30
+#   training.mixed_precision=false
+# ============================================================================
+
+training:
+  # Epochs & early stopping
+  num_epochs: 1000                            # Maximum training epochs
+  
+  early_stopping:
+    enabled: true                             # Enable early stopping
+    patience: 200                             # Epochs to wait without improvement
+    metric: "val_loss"                        # Metric to monitor (loss penalizes bad calibration)
+    mode: "min"                               # Minimize the metric
+    min_delta: 0.0001                         # Minimum improvement to count as progress
+    
+  # Gradient management
+  gradient_accumulation_steps: 1              # Increase if batch_size too small (simulates larger batches)
+  gradient_clip_norm: 1.0                     # Gradient clipping to prevent exploding gradients
+  mixed_precision: true                       # Automatic Mixed Precision (AMP) for faster training
+
+  # Checkpointing
+  save_top_k: 1                               # Save only THE best checkpoint (prevents cherry-picking)
+  checkpoint_every_n_epochs: 10               # Save checkpoint every N epochs (for monitoring)
+  save_last: true                             # Always save last checkpoint (for resuming)
+
+  # Model Selection (critical for reproducibility)
+  model_selection:
+    criterion: "val_loss"                     # Metric for selecting "best" model (loss prevents degenerate checkpoints)
+    mode: "min"                               # Minimize the criterion
+    min_epoch_for_best: 30                    # Don't save best model before this epoch (avoids untrained checkpoints)
+    use_for_testing: "best_checkpoint"        # Use best checkpoint (not last) for evaluation
+    # This ensures no test set leakage - model is selected purely on validation performance
+
+  # Monitoring
+  log_every_n_steps: 10                       # Log metrics every N steps
+  val_check_interval: 1.0                     # Validation frequency (1.0 = every epoch)
