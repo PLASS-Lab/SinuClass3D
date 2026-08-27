@@ -4,11 +4,11 @@
 
 ### A Fully Automated Pipeline with Safety-Aware Deployment Analysis
 
-**Ethan Yu**<sup>1</sup> &nbsp;&nbsp; **Jin Youp Kim**<sup>2</sup> &nbsp;&nbsp; **Yunsik Son**<sup>1,†</sup>
+**Ethan Yu**<sup>1</sup> &nbsp;&nbsp; **Jin Youp Kim**<sup>2,†</sup> &nbsp;&nbsp; **Yunsik Son**<sup>1,†</sup>
 
 <sup>1</sup> Department of Computer Science and Artificial Intelligence, Dongguk University, Seoul, Korea <br>
 <sup>2</sup> Department of Otorhinolaryngology–Head and Neck Surgery, Dongguk University Ilsan Hospital, Goyang, Korea <br>
-<sup>†</sup> Corresponding author
+<sup>†</sup> Corresponding authors
 
 [![Paper](https://img.shields.io/badge/Paper-under%20review-b31b1b.svg)](#citation)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
