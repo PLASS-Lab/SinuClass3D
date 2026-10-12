@@ -4,11 +4,15 @@
 
 ### A Fully Automated Pipeline with Safety-Aware Deployment Analysis
 
-**Ethan Yu**<sup>1</sup> &nbsp;&nbsp; **Jin Youp Kim**<sup>2,†</sup> &nbsp;&nbsp; **Yunsik Son**<sup>1,†</sup>
+**Ethan Yu**<sup>1,\*</sup> &nbsp;&nbsp; **Jin Youp Kim**<sup>2,3,\*</sup> &nbsp;&nbsp; **Doo Hee Han**<sup>4</sup> &nbsp;&nbsp; **Tae-Bin Won**<sup>4</sup> <br>
+**Hyun Jik Kim**<sup>4</sup> &nbsp;&nbsp; **Dong-Young Kim**<sup>4</sup> &nbsp;&nbsp; **Chae-Seo Rhee**<sup>4,5,†</sup> &nbsp;&nbsp; **Yunsik Son**<sup>1,†</sup>
 
-<sup>1</sup> Department of Computer Science and Artificial Intelligence, Dongguk University, Seoul, Korea <br>
-<sup>2</sup> Department of Otorhinolaryngology–Head and Neck Surgery, Dongguk University Ilsan Hospital, Goyang, Korea <br>
-<sup>†</sup> Corresponding authors
+<sup>1</sup> Department of Computer Science and Artificial Intelligence, Dongguk University, Seoul, Republic of Korea <br>
+<sup>2</sup> Department of Otorhinolaryngology–Head and Neck Surgery, Ilsan Hospital, Dongguk University, Goyang, Republic of Korea <br>
+<sup>3</sup> Sensory Organ Research Institute, College of Medicine, Dongguk University, Gyeongju, Republic of Korea <br>
+<sup>4</sup> Department of Otorhinolaryngology–Head and Neck Surgery, Seoul National University College of Medicine, Seoul National University Hospital, Seoul, Republic of Korea <br>
+<sup>5</sup> Department of Otorhinolaryngology, Bundang Jesaeng Hospital, Seongnam, Republic of Korea <br>
+<sup>\*</sup> Equal contribution &nbsp;&nbsp; <sup>†</sup> Corresponding authors
 
 [![Paper](https://img.shields.io/badge/Paper-under%20review-b31b1b.svg)](#citation)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
@@ -17,10 +21,6 @@
 [![uv](https://img.shields.io/badge/managed%20by-uv-de5fe9.svg)](https://docs.astral.sh/uv/)
 
 </div>
-
-<!-- Add a teaser here once you export one, e.g.:
-<div align="center"><img src="assets/teaser.png" width="90%"></div>
-The figure-generation code lives on the `main` branch. -->
 
 ---
 
@@ -34,17 +34,35 @@ carries the performance, not the input representation and not model capacity.
 
 ## Abstract
 
-Eosinophilic chronic rhinosinusitis (ECRS) and non-eosinophilic CRS require
-different treatment strategies, yet endotype assignment still relies on invasive
-tissue biopsy. We ask whether routine paranasal sinus CT alone can support
-automated, non-invasive endotype prediction. In a single-center retrospective
-study of 184 patients with histopathologically confirmed labels, we build a
-deliberately minimal two-stage pipeline: nnU-Net v2 segments the paranasal
-sinuses, and a lightweight 3D CNN classifies the segmented volume. To identify
-what actually drives performance, we ablate the input representation, the ROI
-masking, and the classifier. Neither the tissue-channel decomposition nor added
-capacity is required; removing the segmentation mask collapses held-out AUC to
-near chance, identifying the segmentation stage as the decisive component.
+**Purpose.** Eosinophilic and non-eosinophilic chronic rhinosinusitis (CRS)
+require different treatments, yet endotype assignment relies on invasive biopsy.
+We investigated whether routine sinus computed tomography (CT) alone could
+support automated, non-invasive endotype prediction.
+
+**Methods.** In this single-center retrospective study of 184 patients with
+histopathologically confirmed labels, we developed a minimal two-stage pipeline:
+nnU-Net v2 segments the paranasal sinuses, and a lightweight 3D convolutional
+neural network classifies the segmented volume. To identify what determined
+performance, we ablated input representation, region-of-interest masking, and
+classifier. The development set (n = 147) was evaluated by five-fold stratified
+cross-validation; a held-out test set (n = 37) was assessed once, at a Youden's J
+threshold pre-specified from Platt-calibrated out-of-fold predictions.
+
+**Results.** The pooled out-of-fold area under the receiver operating
+characteristic (ROC) curve (AUC) was 0.825. On the held-out set, the calibrated
+five-fold ensemble achieved an AUC of 0.897 (95% CI: 0.776–0.994), sensitivity
+of 72.7%, and specificity of 86.7%. In the ablations, neither tissue-channel
+decomposition nor added capacity improved discrimination (single-channel AUC
+0.903; no improvement with deeper networks), whereas removing the segmentation
+mask reduced the AUC to 0.564 (near chance); segmentation (mean Dice 0.920) was
+thus the decisive component. Safety-Aware ROC analysis identified rule-out and
+rule-in zones meeting negative predictive value (NPV) ≥ 0.95 and positive
+predictive value (PPV) ≥ 0.90 simultaneously.
+
+**Conclusions.** Routine sinus CT encodes endotype information that a fully
+automated pipeline can extract; performance depends on segmentation rather than
+on input representation or capacity. These results motivate external validation
+of imaging-based CRS endotype triage.
 
 ## Method
 
@@ -92,18 +110,19 @@ were touched (Youden's *J* on Platt-calibrated out-of-fold predictions,
 | Ablation | CV AUC | Held-out AUC |
 |:--|:--:|:--:|
 | Three-channel masked (pre-specified) | 0.825 | 0.897 |
-| Single raw-HU channel | 0.840 | 0.903 |
+| Single-channel masked HU | 0.840 | 0.903 |
 | Two-channel, ≥ 250 HU excluded | 0.756 | 0.782 |
-| **Segmentation mask removed** | 0.732 | **0.564** |
+| **Segmentation mask removed** | 0.721 | **0.564** |
 
 | Architecture | Params | CV AUC | Held-out AUC |
 |:--|:--:|:--:|:--:|
 | **Sinus3DCNN (ours)** | **1.17 M** | 0.825 | **0.897** |
 | 3D EfficientNet-B0 | 4.69 M | 0.666 | 0.788 |
-| 3D DenseNet-121 | 11.29 M | 0.723 | 0.821 |
-| 3D ResNet-18 | 33.21 M | 0.847 | 0.861 |
+| 3D DenseNet-121 | 11.29 M | 0.711 | 0.821 |
+| 3D ResNet-18 | 33.21 M | 0.852 | 0.861 |
 
-Neither the channel decomposition nor 29× more parameters helps. Removing the
+Neither the channel decomposition nor 28× more parameters improves held-out
+discrimination. Removing the
 mask drops held-out AUC to near chance *while cross-validation stays well above
 it* — the unmasked model latches onto background cues that do not generalize.
 
@@ -113,7 +132,7 @@ Requires [uv](https://docs.astral.sh/uv/) and, for GPU training, an NVIDIA
 driver supporting CUDA 12.8.
 
 ```bash
-git clone https://github.com/0x00000024/SinuClass3D
+git clone https://github.com/PLASS-Lab/SinuClass3D
 cd SinuClass3D
 uv sync
 ```
@@ -197,9 +216,9 @@ applied once. There is no separate ensemble checkpoint.
 | Fold checkpoints | 5 × ~13 MB | `fold_{1..5}/checkpoints/best_model.pth`, selected by lowest validation loss |
 | Platt calibrator | 1 | needed for the operating point; AUC is rank-based and unaffected |
 
-Released on the [Releases](https://github.com/0x00000024/SinuClass3D/releases)
-page. Together they reproduce the held-out results without access to the
-training data.
+To be released on the [Releases](https://github.com/PLASS-Lab/SinuClass3D/releases)
+page upon acceptance of the paper. Together they reproduce the held-out results
+without access to the training data.
 
 ## Repository layout
 
@@ -211,9 +230,8 @@ scripts/     Entry points: train, evaluate, predict
 csv/         Cohort manifest schema
 ```
 
-This branch is the training and evaluation pipeline. Figure generation, HTML
-reporting and Grad-CAM++ explainability are kept with the manuscript sources on
-the `main` branch rather than in the code release.
+This repository holds the training and evaluation pipeline. Figure generation,
+HTML reporting and Grad-CAM++ explainability code are not part of this release.
 
 ## Citation
 
@@ -225,8 +243,9 @@ a DOI.
   title   = {Non-invasive prediction of eosinophilic chronic rhinosinusitis
              endotype from routine sinus CT: a fully automated pipeline with
              safety-aware deployment analysis},
-  author  = {Yu, Ethan and Kim, Jin Youp and Son, Yunsik},
-  note    = {Manuscript under review},
+  author  = {Yu, Ethan and Kim, Jin Youp and Han, Doo Hee and Won, Tae-Bin and
+             Kim, Hyun Jik and Kim, Dong-Young and Rhee, Chae-Seo and Son, Yunsik},
+  note    = {Submitted to Computerized Medical Imaging and Graphics},
   year    = {2026}
 }
 ```
