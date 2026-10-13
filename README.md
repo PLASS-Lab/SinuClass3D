@@ -153,7 +153,7 @@ public release.
 
 To run on your own cohort, build a manifest matching
 [`csv/patient_ids_TEMPLATE.csv`](csv/patient_ids_TEMPLATE.csv) — one row per
-patient, a `class` column (`ECRS` / `non_ECRS`), and one path column per
+patient, a `class` column (`ECRS` / `non-ECRS`), and one path column per
 preprocessed representation — then point `data.paths.csv_path` at it.
 [`datasets/dataset_structure.md`](datasets/dataset_structure.md) describes the
 on-disk layout, and the scripts in [`datasets/`](datasets/) cover DICOM → NIfTI
@@ -202,8 +202,16 @@ augmentation and no test-time augmentation at evaluation.
 
 ```bash
 # held-out test cohort, calibrated five-fold ensemble
-uv run python scripts/evaluate.py evaluation.held_out_test_cohort=true
+uv run python scripts/evaluate.py \
+    evaluation.held_out_test_cohort=true \
+    evaluation.experiment_dir=experiments/<experiment_name> \
+    data.paths.csv_path=<development manifest> \
+    data.external_test.csv_path=<held-out manifest>
 ```
+
+`experiments/<experiment_name>` is the directory `scripts/train.py` wrote
+(`core.experiment_name`). The script reads the development manifest before it
+switches to the held-out one, so pass both.
 
 The ensemble is formed at inference: the five fold models' raw probabilities are
 averaged, then the Platt calibrator fitted on pooled out-of-fold predictions is
