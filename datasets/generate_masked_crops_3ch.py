@@ -79,10 +79,10 @@ def process_patient(patient_id, image_path, label_path, output_dir, margin_mm=5,
     """
     Process a single patient to generate 3-channel masked crops.
     
-    Pipeline:
+    Pipeline (the order used to build the paper's inputs):
     1. Load image and mask
-    2. Compute bounding box with margin
-    3. Crop and resample to target spacing (1mm isotropic)
+    2. Resample the whole volume to target spacing (1mm isotropic)
+    3. Crop a bounding box with margin around the resampled mask
     4. Create 3 tissue channels with mask applied (non-ROI = 0)
     """
     try:
@@ -100,23 +100,19 @@ def process_patient(patient_id, image_path, label_path, output_dir, margin_mm=5,
         logger.info(f"  Native spacing: {voxel_spacing}")
         logger.info(f"  Native shape: {img_data.shape}")
         
-        # Get bounding box with margin (using native spacing)
-        bbox = get_bbox_with_margin(label_data, voxel_spacing, margin_mm=margin_mm)
-        
+        # Resample the whole volume to target spacing (1mm isotropic) first
+        img_iso = resample_volume(img_data, voxel_spacing, target_spacing, order=1)
+        mask_iso = resample_volume((label_data > 0).astype(np.float64), voxel_spacing,
+                                   target_spacing, order=0)  # Nearest for mask
+
+        # Bounding box with margin around the resampled mask, then crop
+        bbox = get_bbox_with_margin(mask_iso, target_spacing, margin_mm=margin_mm)
         if bbox is None:
             logger.error(f"Patient {patient_id}: No foreground found")
             return False, None, None
-        
-        # Crop image and mask
-        img_crop = img_data[bbox]
-        mask_crop = (label_data[bbox] > 0).astype(np.float32)
-        
-        logger.info(f"  Cropped shape (native): {img_crop.shape}")
-        
-        # Resample to target spacing (1mm isotropic)
-        img_resampled = resample_volume(img_crop, voxel_spacing, target_spacing, order=1)
-        mask_resampled = resample_volume(mask_crop, voxel_spacing, target_spacing, order=0)  # Nearest for mask
-        mask_resampled = (mask_resampled > 0.5).astype(np.float32)  # Binarize after resampling
+
+        img_resampled = img_iso[bbox]
+        mask_resampled = (mask_iso[bbox] > 0.5).astype(np.float32)
         
         logger.info(f"  Resampled shape (1mm iso): {img_resampled.shape}")
         

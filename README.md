@@ -185,9 +185,9 @@ uv run python datasets/generate_masked_crops_3ch.py --csv <manifest> --output-cs
 ```
 
 The input manifest needs `patient_id`, `class`, `image_path` and `mask_path`.
-For each patient the script crops a box with a 5 mm margin around the mask,
-resamples it to 1 mm isotropic, and writes the three masked channels and the
-single-channel masked HU next to the CT, adding their path columns. Without
+For each patient the script resamples the CT and mask to 1 mm isotropic, crops
+a box with a 5 mm margin around the mask, and writes the three masked channels
+and the single-channel masked HU next to the CT, adding their path columns. Without
 `--output-csv` it overwrites the input manifest.
 
 **4. Manifest.** The output of step 3 matches
