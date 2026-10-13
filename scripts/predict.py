@@ -6,29 +6,27 @@ Performs inference on new, unlabeled CT scans using trained models.
 Features:
 - Single model or ensemble (multiple folds) prediction
 - Uncertainty quantification (prediction variance)
-- Grad-CAM explanations (optional)
 - Batch processing with progress tracking
-- Publication-ready output formats (CSV, JSON)
+- Output as CSV
 
-Usage:
+The predicted class is the argmax of the (mean) raw softmax probabilities;
+no Platt calibration or locked threshold is applied here. The calibrated
+operating point reported in the paper is applied by scripts/evaluate.py.
+
+Usage (the prediction.* keys are not in the default config, hence the "+"):
     # Single model prediction
-    python scripts/classification/predict.py \
-        prediction.checkpoint_path=outputs/experiment/fold_1/checkpoints/best_model.pth \
-        prediction.input_csv=data/new_patients.csv \
-        prediction.output_dir=predictions/
+    python scripts/predict.py \
+        +prediction.use_ensemble=false \
+        +prediction.checkpoint_path=experiments/<experiment_name>/fold_1/checkpoints/best_model.pth \
+        +prediction.input_csv=data/new_patients.csv \
+        +prediction.output_dir=predictions/
 
     # Ensemble prediction (all CV folds)
-    python scripts/classification/predict.py \
-        prediction.use_ensemble=true \
-        prediction.experiment_dir=outputs/experiment/ \
-        prediction.input_csv=data/new_patients.csv \
-        prediction.output_dir=predictions/
-
-    # With Grad-CAM
-    python scripts/classification/predict.py \
-        prediction.checkpoint_path=outputs/experiment/fold_1/checkpoints/best_model.pth \
-        prediction.input_csv=data/new_patients.csv \
-        explainability.enabled=true
+    python scripts/predict.py \
+        +prediction.use_ensemble=true \
+        +prediction.experiment_dir=experiments/<experiment_name> \
+        +prediction.input_csv=data/new_patients.csv \
+        +prediction.output_dir=predictions/
 """
 
 import logging

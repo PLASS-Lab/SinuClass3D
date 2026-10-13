@@ -19,25 +19,21 @@ Usage:
     # Mode 1: Held-out test cohort evaluation (ensemble of all folds)
     python scripts/evaluate.py \
         evaluation.held_out_test_cohort=true \
-        evaluation.experiment_dir=outputs/experiment/ \
-        data.paths.csv_path=csv/patient_ids_held_out_test.csv \
-        evaluation/operating_point=deployment_threshold \
+        evaluation.experiment_dir=experiments/<experiment_name> \
+        data.paths.csv_path=<development manifest> \
+        data.external_test.csv_path=<held-out manifest>
     
     # Mode 2a: Internal CV evaluation (all folds)
     python scripts/evaluate.py \
         evaluation.evaluate_all_folds=true \
-        evaluation.experiment_dir=outputs/experiment/
+        evaluation.experiment_dir=experiments/<experiment_name>
     
     # Mode 2b: Internal CV evaluation (specific fold)
     python scripts/evaluate.py \
         evaluation.evaluate_all_folds=false \
         evaluation.fold=2 \
-        evaluation.experiment_dir=outputs/experiment/
-    
-    # With comprehensive report
-    python scripts/evaluate.py \
-        evaluation.fold=0 \
-        evaluation.experiment_dir=outputs/experiment/ \
+        evaluation.experiment_dir=experiments/<experiment_name>
+
 """
 
 import json
