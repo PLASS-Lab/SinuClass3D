@@ -13,6 +13,8 @@ Output columns (1mm isotropic):
 - bbox_5mm_1mm_iso_masked_air_path
 - bbox_5mm_1mm_iso_masked_soft_path  
 - bbox_5mm_1mm_iso_masked_bone_path
+- masked_hu_1ch_path (single-channel masked HU = sum of the three channels,
+  the input of the single-channel ablation)
 """
 
 import argparse
@@ -130,6 +132,7 @@ def process_patient(patient_id, image_path, label_path, output_dir, margin_mm=5,
             'bbox_5mm_1mm_iso_masked_soft_path': os.path.join(output_dir, f"{patient_id}_bbox_5mm_1mm_iso_masked_soft.nii.gz"),
             'bbox_5mm_1mm_iso_masked_bone_path': os.path.join(output_dir, f"{patient_id}_bbox_5mm_1mm_iso_masked_bone.nii.gz"),
             'bbox_5mm_1mm_iso_mask_path': os.path.join(output_dir, f"{patient_id}_bbox_5mm_1mm_iso_mask.nii.gz"),
+            'masked_hu_1ch_path': os.path.join(output_dir, f"{patient_id}_bbox_5mm_1mm_iso_masked_hu.nii.gz"),
         }
         
         # 1. Air channel: ≤ -150 HU, masked
@@ -146,6 +149,11 @@ def process_patient(patient_id, image_path, label_path, output_dir, margin_mm=5,
         
         # 4. Resampled mask
         nib.save(nib.Nifti1Image(mask_resampled.astype(np.float32), affine_iso), output_paths['bbox_5mm_1mm_iso_mask_path'])
+
+        # 5. Single-channel masked HU (the thresholds partition HU, so this
+        #    equals air + soft + bone)
+        hu_crop = air_crop + soft_crop + bone_crop
+        nib.save(nib.Nifti1Image(hu_crop.astype(np.float32), affine_iso), output_paths['masked_hu_1ch_path'])
         
         logger.info(f"  ✅ Saved 3 channels + mask (1mm iso): {img_resampled.shape}")
         
@@ -415,7 +423,8 @@ def main():
         'bbox_5mm_1mm_iso_masked_air_path',
         'bbox_5mm_1mm_iso_masked_soft_path',
         'bbox_5mm_1mm_iso_masked_bone_path',
-        'bbox_5mm_1mm_iso_mask_path'
+        'bbox_5mm_1mm_iso_mask_path',
+        'masked_hu_1ch_path'
     ]
     for col in new_columns:
         if col not in fieldnames:
