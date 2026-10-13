@@ -8,6 +8,7 @@ volumes at /opt/datasets/sinus/classification with organized DICOM file structur
 Only processes original CT volumes - no label/segmentation processing.
 """
 
+import argparse
 import logging
 import shutil
 import sys
@@ -41,16 +42,21 @@ class ClassificationDicomConverter:
     Follows SOLID principles with single responsibility for classification conversion.
     """
 
-    def __init__(self, patient_ids_file: str) -> None:
+    def __init__(self,
+                 patient_ids_file: str,
+                 input_base: str = "/opt/datasets/sinus_test/classification",
+                 output_base: str = "/opt/datasets/sinus/classification") -> None:
         """
         Initialize the classification converter.
         
         Args:
             patient_ids_file: Path to patient_ids_classification.csv file
+            input_base: Directory holding one DICOM folder per patient
+            output_base: Directory receiving one NIfTI folder per patient
         """
         self.patient_ids_file = Path(patient_ids_file)
-        self.input_base = Path("/opt/datasets/sinus_test/classification")
-        self.output_base = Path("/opt/datasets/sinus/classification")
+        self.input_base = Path(input_base)
+        self.output_base = Path(output_base)
 
         self._setup_logging()
         self._validate_paths()
@@ -391,12 +397,24 @@ class ClassificationDicomConverter:
 
 def main() -> bool:
     """Main function to run the classification conversion pipeline."""
-    # Configuration
-    patient_ids_file = "/opt/datasets/sinus/patient_ids_classification.csv"
+    parser = argparse.ArgumentParser(
+        description="Convert classification-cohort DICOM series to NIfTI.")
+    parser.add_argument("--patient-ids",
+                        default="/opt/datasets/sinus/patient_ids_classification.csv",
+                        help="CSV whose first column lists the patient IDs")
+    parser.add_argument("--input-base",
+                        default="/opt/datasets/sinus_test/classification",
+                        help="Input directory: <input-base>/<patient_id>/*.dcm")
+    parser.add_argument("--output-base",
+                        default="/opt/datasets/sinus/classification",
+                        help="Output directory: <output-base>/<patient_id>/<patient_id>.nii.gz")
+    args = parser.parse_args()
 
     try:
         # Initialize converter
-        converter = ClassificationDicomConverter(patient_ids_file)
+        converter = ClassificationDicomConverter(args.patient_ids,
+                                                 input_base=args.input_base,
+                                                 output_base=args.output_base)
 
         # Run conversion
         conversion_results = converter.convert_all_patients()

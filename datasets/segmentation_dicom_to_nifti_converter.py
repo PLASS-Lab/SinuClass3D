@@ -7,6 +7,7 @@ from /opt/datasets/sinus_test/segmentation/{label,original} into properly format
 volumes at /opt/datasets/sinus with binary ground truth masks.
 """
 
+import argparse
 import csv
 import logging
 import shutil
@@ -34,7 +35,9 @@ class SegmentationDicomConverter:
 
     def __init__(self,
                  patient_ids_file: Optional[str] = None,
-                 debug: bool = False) -> None:
+                 debug: bool = False,
+                 input_base: str = "/opt/datasets/sinus_test/segmentation",
+                 output_base: str = "/opt/datasets/sinus/segmentation") -> None:
         """
         Initialize the segmentation converter.
         
@@ -42,14 +45,17 @@ class SegmentationDicomConverter:
             patient_ids_file: Path to patient IDs file (CSV or TXT). 
                             Defaults to /opt/datasets/sinus/patient_ids_segmentation.csv
             debug: Enable debug logging for detailed GT DICOM processing logs
+            input_base: Directory with original/<patient_id>/*.dcm and
+                        label/<patient_id>/*.dcm
+            output_base: Directory receiving one NIfTI folder per patient
         """
         # Set default CSV file if not specified
         if patient_ids_file is None:
             patient_ids_file = "/opt/datasets/sinus/patient_ids_segmentation.csv"
 
         self.patient_ids_file = Path(patient_ids_file)
-        self.input_base = Path("/opt/datasets/sinus_test/segmentation")
-        self.output_base = Path("/opt/datasets/sinus/segmentation")
+        self.input_base = Path(input_base)
+        self.output_base = Path(output_base)
 
         self._setup_logging(debug)
         self._validate_paths()
@@ -689,9 +695,23 @@ class SegmentationDicomConverter:
 def main() -> bool:
     """Main function to run the segmentation conversion pipeline."""
     try:
-        # Initialize converter with default CSV file
-        # Uses /opt/datasets/sinus/patient_ids_segmentation.csv by default
-        converter = SegmentationDicomConverter(debug=True)
+        parser = argparse.ArgumentParser(
+            description="Convert annotated segmentation DICOM series to NIfTI.")
+        parser.add_argument("--patient-ids",
+                            default="/opt/datasets/sinus/patient_ids_segmentation.csv",
+                            help="CSV with a patient_id column, or a TXT with one ID per line")
+        parser.add_argument("--input-base",
+                            default="/opt/datasets/sinus_test/segmentation",
+                            help="Input directory with original/<id>/ and label/<id>/ DICOM folders")
+        parser.add_argument("--output-base",
+                            default="/opt/datasets/sinus/segmentation",
+                            help="Output directory: <output-base>/<id>/<id>.nii.gz and <id>_gt.nii.gz")
+        args = parser.parse_args()
+
+        converter = SegmentationDicomConverter(args.patient_ids,
+                                               debug=True,
+                                               input_base=args.input_base,
+                                               output_base=args.output_base)
 
         # Run conversion
         conversion_results = converter.convert_all_patients()
