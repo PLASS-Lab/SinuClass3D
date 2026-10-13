@@ -855,9 +855,11 @@ class ComprehensiveMetrics:
         # Force label order to handle missing classes in small datasets
         cm = confusion_matrix(y_true, y_pred, labels=[0, 1])
 
-        # Normalize if configured (figures.confusion_matrix.normalize)
-        cm_config = self.metrics_config['figures']['confusion_matrix']
-        normalize = cm_config['normalize']
+        # Normalize if configured (figures.confusion_matrix.normalize). The
+        # figures config group is not part of this release; default to
+        # row-normalized, its previous setting.
+        cm_config = self.metrics_config.get('figures', {}).get('confusion_matrix', {})
+        normalize = cm_config.get('normalize', 'true')
         
         # Accept bool + common strings robustly
         if normalize is True or str(normalize).lower() == 'true':
