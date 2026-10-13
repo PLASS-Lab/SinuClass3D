@@ -9,9 +9,14 @@ Features:
 - Batch processing with progress tracking
 - Output as CSV
 
-The predicted class is the argmax of the (mean) raw softmax probabilities;
-no Platt calibration or locked threshold is applied here. The calibrated
-operating point reported in the paper is applied by scripts/evaluate.py.
+predicted_label is the argmax of the (mean) raw softmax probabilities. In
+ensemble mode the script also applies the paper's operating point, as
+scripts/evaluate.py does for the held-out cohort: the averaged raw probability
+is Platt-calibrated with the calibrator fitted on pooled out-of-fold
+predictions and thresholded at the Youden's J value locked during
+cross-validation (calibrated_prob_class_1, threshold,
+calibrated_predicted_label, calibrated_predicted_class_name). Single-model
+mode has no matching calibrator and reports raw probabilities only.
 
 Usage (the prediction.* keys are not in the default config, hence the "+"):
     # Single model prediction
@@ -34,6 +39,9 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 import hydra
+import joblib
+import numpy as np
+import yaml
 from omegaconf import DictConfig, OmegaConf
 
 from src.data import create_data_module, prepare_csv_for_training
@@ -58,6 +66,41 @@ def find_ensemble_checkpoints(experiment_dir: Path, n_folds: int) -> List[str]:
     # Import to avoid duplication
     from src.inference import find_ensemble_checkpoints as find_checkpoints
     return find_checkpoints(experiment_dir, n_folds)
+
+
+def add_calibrated_predictions(predictions_df, experiment_dir: Path,
+                               class_names: List[str]):
+    """
+    Add the calibrated operating point to ensemble predictions.
+
+    Mirrors scripts/evaluate.py: Platt-calibrate the averaged raw probability
+    of the positive class once, then threshold it at the Youden's J value
+    locked from internal cross-validation.
+    """
+    calibration_dir = experiment_dir / 'calibration'
+    calibrator_path = calibration_dir / 'calibrator.pkl'
+    config_path = calibration_dir / 'calibration_config.yaml'
+    if not (calibrator_path.exists() and config_path.exists()):
+        logger.warning(f"No calibrator in {calibration_dir}; "
+                       "reporting raw probabilities only")
+        return predictions_df
+
+    calibrator = joblib.load(calibrator_path)
+    with open(config_path) as f:
+        threshold = yaml.safe_load(f)['calibrated_threshold']
+
+    eps = 1e-15
+    raw = np.clip(predictions_df['prob_class_1'].to_numpy(), eps, 1 - eps)
+    logits = np.log(raw / (1 - raw))
+    calibrated = calibrator.predict_proba(logits.reshape(-1, 1))[:, 1]
+    labels = (calibrated >= threshold).astype(int)
+
+    predictions_df['calibrated_prob_class_1'] = calibrated
+    predictions_df['threshold'] = threshold
+    predictions_df['calibrated_predicted_label'] = labels
+    predictions_df['calibrated_predicted_class_name'] = [class_names[i] for i in labels]
+    logger.info(f"Calibrated with {calibrator_path} at locked threshold {threshold:.4f}")
+    return predictions_df
 
 
 @hydra.main(version_base=None, config_path="pkg://configs", config_name="config_3d")
@@ -159,6 +202,9 @@ def main(cfg: DictConfig):
     # Run predictions
     logger.info("\nGenerating predictions...")
     predictions_df = predictor.predict_dataset(inference_loader)
+    if use_ensemble:
+        predictions_df = add_calibrated_predictions(
+            predictions_df, experiment_dir, cfg_dict['classification']['class_names'])
 
     # Save results
     output_csv = output_dir / 'predictions.csv'
