@@ -160,8 +160,10 @@ converts the annotated segmentation set (CT plus manual sinus mask). Both take
 [`datasets/dataset_structure.md`](datasets/dataset_structure.md) describes the
 layout they write.
 
-**2. Stage 1: sinus masks with nnU-Net v2.** With `nnUNet_raw`,
-`nnUNet_preprocessed` and `nnUNet_results` set:
+**2. Stage 1: sinus masks with nnU-Net v2.** The paper segments the paranasal
+sinuses with nnU-Net v2 (`3d_fullres`) trained on manually annotated scans; see
+Section 2.4 of the paper. To train and apply it on your own annotated set, with
+`nnUNet_raw`, `nnUNet_preprocessed` and `nnUNet_results` set:
 
 ```bash
 # annotated set -> nnU-Net dataset (CT channel, binary sinus label)
@@ -173,10 +175,7 @@ for f in 0 1 2 3 4; do nnUNetv2_train 998 3d_fullres $f; done
 nnUNetv2_predict -i <ct folder> -o <mask folder> -d 998 -c 3d_fullres -f 0 1 2 3 4
 ```
 
-Each patient's `mask_path` is then `<mask folder>/<patient_id>.nii.gz`. The
-segmentation Dice reported in the paper (0.920 ± 0.055) is this five-fold
-cross-validation run with `-tr nnUNetTrainer_100epochs`. Segmentation weights
-are not distributed.
+Each patient's `mask_path` is then `<mask folder>/<patient_id>.nii.gz`.
 
 **3. Crops and tissue channels.**
 
