@@ -138,12 +138,10 @@ uv sync
 ```
 
 `uv sync` builds `.venv` from the versions pinned in `uv.lock`, so the
-environment is reproducible. For the dataset-preparation tools
-(TotalSegmentator):
-
-```bash
-uv sync --extra preprocessing
-```
+environment is reproducible. Data preparation additionally needs the
+[`dcm2niix`](https://github.com/rordenlab/dcm2niix) command-line tool (DICOM
+conversion) and [nnU-Net v2](https://github.com/MIC-DKFZ/nnUNet) (Stage 1, the
+paper used `nnunetv2` 2.6.4); both are installed separately, outside `uv`.
 
 ## Data
 
@@ -151,13 +149,52 @@ uv sync --extra preprocessing
 labels come from a single center under an IRB protocol that does not permit
 public release.
 
-To run on your own cohort, build a manifest matching
-[`csv/patient_ids_TEMPLATE.csv`](csv/patient_ids_TEMPLATE.csv) — one row per
-patient, a `class` column (`ECRS` / `non-ECRS`), and one path column per
-preprocessed representation — then point `data.paths.csv_path` at it.
+To run on your own cohort, prepare the data in four steps.
+
+**1. DICOM → NIfTI.**
+[`classification_dicom_to_nifti_converter.py`](datasets/classification_dicom_to_nifti_converter.py)
+converts each classification patient's CT, and
+[`segmentation_dicom_to_nifti_converter.py`](datasets/segmentation_dicom_to_nifti_converter.py)
+converts the annotated segmentation set (CT plus manual sinus mask). Both take
+`--patient-ids`, `--input-base` and `--output-base`;
 [`datasets/dataset_structure.md`](datasets/dataset_structure.md) describes the
-on-disk layout, and the scripts in [`datasets/`](datasets/) cover DICOM → NIfTI
-conversion, ROI extraction and channel generation.
+layout they write.
+
+**2. Stage 1: sinus masks with nnU-Net v2.** With `nnUNet_raw`,
+`nnUNet_preprocessed` and `nnUNet_results` set:
+
+```bash
+# annotated set -> nnU-Net dataset (CT channel, binary sinus label)
+uv run python datasets/build_nnunet_dataset.py --segmentation-root <annotated set> --dataset-id 998
+nnUNetv2_plan_and_preprocess -d 998 -c 3d_fullres --verify_dataset_integrity
+for f in 0 1 2 3 4; do nnUNetv2_train 998 3d_fullres $f; done
+
+# classification CTs, linked as <patient_id>_0000.nii.gz in one folder
+nnUNetv2_predict -i <ct folder> -o <mask folder> -d 998 -c 3d_fullres -f 0 1 2 3 4
+```
+
+Each patient's `mask_path` is then `<mask folder>/<patient_id>.nii.gz`. The
+segmentation Dice reported in the paper (0.920 ± 0.055) is this five-fold
+cross-validation run with `-tr nnUNetTrainer_100epochs`. Segmentation weights
+are not distributed.
+
+**3. Crops and tissue channels.**
+
+```bash
+uv run python datasets/generate_masked_crops_3ch.py --csv <manifest> --output-csv <manifest with channels>
+```
+
+The input manifest needs `patient_id`, `class`, `image_path` and `mask_path`.
+For each patient the script crops a box with a 5 mm margin around the mask,
+resamples it to 1 mm isotropic, and writes the three masked channels and the
+single-channel masked HU next to the CT, adding their path columns. Without
+`--output-csv` it overwrites the input manifest.
+
+**4. Manifest.** The output of step 3 matches
+[`csv/patient_ids_TEMPLATE.csv`](csv/patient_ids_TEMPLATE.csv): one row per
+patient with a `class` column (`ECRS` / `non-ECRS`). Point
+`data.paths.csv_path` at the development manifest and
+`data.external_test.csv_path` at the held-out one.
 
 ## Training
 
@@ -232,7 +269,7 @@ without access to the training data.
 
 ```
 configs/     Hydra configuration (core, data, model, training, evaluation, inference)
-datasets/    DICOM -> NIfTI conversion, ROI extraction, channel generation
+datasets/    DICOM -> NIfTI conversion, nnU-Net dataset builder, crops and channels
 src/         Library code: data, models, training, evaluation, inference, utils
 scripts/     Entry points: train, evaluate, predict
 csv/         Cohort manifest schema
