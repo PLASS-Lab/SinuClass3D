@@ -18,7 +18,6 @@ from typing import Dict, List
 import numpy as np
 import torch
 from monai.transforms import (
-    CenterSpatialCropd,
     Compose,
     EnsureChannelFirstd,
     LoadImaged,
@@ -31,10 +30,8 @@ from monai.transforms import (
     RandGaussianSmoothd,
     RandScaleIntensityd,
     RandShiftIntensityd,
-    Resized,
     ScaleIntensityRanged,
     Spacingd,
-    SpatialPadd,
     ToTensord,
     Transform,
 )
@@ -221,36 +218,6 @@ def build_transforms(config: Dict, mode: str = "train") -> Compose:
                 pixdim=target_spacing,
                 mode=interp_mode,  # Renamed to avoid conflict with dataset mode
             ))
-        
-        # 3c. Ensure 368³ size for DINO3D (divisible by patch_size=16)
-        # DINO3D pretrained on 112³ but supports larger sizes via positional embedding interpolation
-        # Other models (ResNet, DenseNet) use adaptive pooling and handle any size
-        model_name = config.get('model', {}).get('name', '')
-        if model_name == 'dino3d':
-            logger.info("DINO3D detected: Isotropic resize to 144³ (maintains aspect ratio)")
-            # Step 1: Isotropic resize - scale longest dimension to 144, others proportionally
-            # This maintains aspect ratio while maximizing use of input capacity
-            transforms.append(
-                Resized(
-                    keys=keys,
-                    spatial_size=144,  # Target for longest dimension
-                    size_mode="longest",  # Scale based on longest dim, maintain ratio
-                    mode="trilinear",
-                ))
-            # Step 2: Pad to fill 144³ (remaining dimensions after isotropic resize)
-            transforms.append(
-                SpatialPadd(
-                    keys=keys,
-                    spatial_size=[144, 144, 144],
-                    mode='constant',
-                    constant_values=0,
-                ))
-            # Step 3: Center crop to exactly 144³ (in case of rounding)
-            transforms.append(
-                CenterSpatialCropd(
-                    keys=keys,
-                    roi_size=[144, 144, 144],
-                ))
 
     # =========================================================================
     # 4. INTENSITY NORMALIZATION (Per-Volume Z-Score, Leak-Safe!)
@@ -296,12 +263,6 @@ def build_transforms(config: Dict, mode: str = "train") -> Compose:
             translate_xy = cfg_aug['random_affine']['translate_range_xy']
             translate_z = cfg_aug['random_affine']['translate_range_z']
 
-            # For DINO3D, ensure output maintains 144³ size (required for patch_size=16)
-            spatial_size_param = {}
-            if model_name == 'dino3d':
-                spatial_size_param['spatial_size'] = [144, 144, 144]
-                logger.debug("DINO3D: RandAffined will maintain 144³ spatial size")
-
             transforms.append(
                 RandAffined(
                     keys=["image"],
@@ -321,7 +282,6 @@ def build_transforms(config: Dict, mode: str = "train") -> Compose:
                     prob=cfg_aug['random_affine']['prob'],  # p=0.25
                     mode=cfg_aug['random_affine']['mode'],
                     padding_mode=cfg_aug['random_affine']['padding_mode'],
-                    **spatial_size_param,  # Maintain spatial size for DINO3D
                 ))
 
     # =========================================================================

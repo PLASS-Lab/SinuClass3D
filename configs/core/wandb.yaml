@@ -23,8 +23,8 @@ wandb:
   
   # Experiment metadata
   version: "v1.0"                             # Appended to run name & added as tag (optional)
-  tags: ["3d", "sinus3dcnn", "3ch", "0.5mm_iso", "5fold_cv", "air_soft_bone"]  # W&B tags
-  notes: "Simple 3D CNN for ECRS classification. 3-channel input (Air≤-150 | Soft -150~250 | Bone≥250 HU), 0.5x0.5x1mm spacing."  # W&B description
+  tags: ["3d", "sinus3dcnn", "3ch", "1mm_iso", "5fold_cv", "air_soft_bone"]  # W&B tags
+  notes: "Simple 3D CNN for ECRS classification. 3-channel input (Air≤-150 | Soft -150~250 | Bone≥250 HU), 1x1x1 mm isotropic spacing."  # W&B description
   
   # Model artifact management
   artifacts:

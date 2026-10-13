@@ -16,6 +16,6 @@
 
 core:
   project_base_dir: "${oc.env:PROJECT_ROOT,.}"              # Base dir (override with $PROJECT_ROOT)
-  experiment_name: "simple_cnn_3d_3ch_05mm"  # Experiment name (used in output dirs and W&B run name)
+  experiment_name: "sinus3dcnn_3ch"    # Experiment name (used in output dirs and W&B run name)
   add_timestamp: false                                      # Append timestamp to experiment name for uniqueness
   experiment_dir: "${core.project_base_dir}/experiments/${core.experiment_name}"  # Where outputs/logs are saved
